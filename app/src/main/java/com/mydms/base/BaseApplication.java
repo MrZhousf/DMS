@@ -1,0 +1,78 @@
+package com.mydms.base;
+
+import android.app.Application;
+import android.os.Environment;
+
+import com.mydms.dms.controller.UserInfoController;
+import com.mydms.dms.core.DMS;
+import com.mydms.dms.core.realm.Migration;
+import com.mydms.dms.model.UserInfo;
+import com.okhttplib.OkHttpUtil;
+import com.okhttplib.annotation.CacheLevel;
+import com.okhttplib.annotation.CacheType;
+
+import io.realm.RealmConfiguration;
+
+/**
+ * Application
+ * 1、初始化全局OkHttpUtil
+ * @author zhousf
+ */
+public class BaseApplication extends Application {
+
+    public static BaseApplication baseApplication;
+
+    public static BaseApplication getApplication() {
+        return baseApplication;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        baseApplication = this;
+        initOkHttpUtil();
+        initDMS();
+
+    }
+
+    void initOkHttpUtil(){
+        String downloadFileDir = Environment.getExternalStorageDirectory().getPath()+"/okHttp_download/";
+        OkHttpUtil.init(this)
+                .setConnectTimeout(30)//连接超时时间
+                .setWriteTimeout(30)//写超时时间
+                .setReadTimeout(30)//读超时时间
+                .setMaxCacheSize(10 * 1024 * 1024)//缓存空间大小
+                .setCacheLevel(CacheLevel.FIRST_LEVEL)//缓存等级
+                .setCacheType(CacheType.NETWORK_THEN_CACHE)//缓存类型
+                .setShowHttpLog(true)//显示请求日志
+                .setShowLifecycleLog(false)//显示Activity销毁日志
+                .setRetryOnConnectionFailure(false)//失败后不自动重连
+                .setDownloadFileDir(downloadFileDir)//文件下载保存目录
+                .build();
+    }
+
+    void initDMS(){
+        RealmConfiguration realmConfiguration = new RealmConfiguration
+                .Builder(BaseApplication.getApplication())
+                .name("realm.realm")//配置名字
+                .encryptionKey(new byte[64])
+                .schemaVersion(1)//版本号
+                .migration(new Migration())//数据库升级/迁移
+                .build();
+        DMS.Builder()
+                .addMC(UserInfo.class,new UserInfoController())
+                .showDMSLog(true)
+                .showRealmLog(true)
+                .realmConfiguration(realmConfiguration)
+                .init();
+
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+    }
+
+
+
+}
