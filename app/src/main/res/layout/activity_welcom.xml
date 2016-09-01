@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".WelcomeActivity">
+
+    <TextView
+        android:id="@+id/tvChangeTip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="用户信息变动监听："
+        />
+
+    <TextView
+        android:id="@+id/tvChange"
+        android:layout_below="@+id/tvChangeTip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <Button
+        android:id="@+id/btnPush"
+        android:layout_below="@+id/tvChange"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Push用户信息"
+        android:textAllCaps="false"
+        />
+
+    <TextView
+        android:id="@+id/tvPushTip"
+        android:layout_below="@+id/btnPush"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Push用户信息："
+        />
+
+    <TextView
+        android:id="@+id/tvPush"
+        android:layout_below="@+id/tvPushTip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <Button
+        android:id="@+id/btnGetData"
+        android:layout_below="@+id/tvPush"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="获取用户信息"
+        />
+
+    <TextView
+        android:id="@+id/tvGetDataTip"
+        android:layout_below="@+id/btnGetData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="用户信息："
+        />
+
+    <TextView
+        android:id="@+id/tvGetData"
+        android:layout_below="@+id/tvGetDataTip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+
+    <Button
+        android:id="@+id/btnPushWeather"
+        android:layout_below="@+id/tvGetData"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Push天气信息"
+        android:textAllCaps="false"
+        />
+
+    <TextView
+        android:id="@+id/tvPushWeatherTip"
+        android:layout_below="@+id/btnPushWeather"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Push天气信息："
+        />
+    <TextView
+        android:id="@+id/tvPushWeather"
+        android:layout_below="@+id/tvPushWeatherTip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+
+</RelativeLayout>
