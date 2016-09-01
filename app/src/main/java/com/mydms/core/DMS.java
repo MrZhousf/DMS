@@ -1,12 +1,12 @@
-package com.mydms.dms.core;
+package com.mydms.core;
 
 import android.util.Log;
 
-import com.mydms.dms.core.bean.DataInfo;
-import com.mydms.dms.core.callback.Callback;
-import com.mydms.dms.core.handler.CallbackMessage;
-import com.mydms.dms.core.handler.DMSHandler;
-import com.mydms.dms.core.realm.RealmUtil;
+import com.mydms.core.bean.DataInfo;
+import com.mydms.core.callback.Callback;
+import com.mydms.core.handler.CallbackMessage;
+import com.mydms.core.handler.DMSHandler;
+import com.mydms.core.realm.RealmUtil;
 
 import java.util.List;
 import java.util.Map;

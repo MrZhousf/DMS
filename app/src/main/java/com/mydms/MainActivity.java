@@ -1,11 +1,12 @@
 package com.mydms;
 
+import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
 import com.mydms.base.BaseActivity;
-import com.mydms.dms.core.DMS;
-import com.mydms.dms.core.callback.Callback;
+import com.mydms.core.DMS;
+import com.mydms.core.callback.Callback;
 import com.mydms.dms.model.UserInfo;
 import com.mydms.util.LogUtil;
 
@@ -31,6 +32,10 @@ public class MainActivity extends BaseActivity {
 
     private String url = "http://api.k780.com:88/?app=life.time&appkey=10003&sign=b59bc3ef6191eb9f747dd4e83c99f2a4&format=json";
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
 
     @OnClick({R.id.getOnlyHttp, R.id.getOnlyLocal, R.id.getData})
     public void onClick(View view) {
@@ -46,6 +51,7 @@ public class MainActivity extends BaseActivity {
                 break;
         }
     }
+
 
     Callback callbackOnlyLocal = new Callback<UserInfo>(UserInfo.class) {
         @Override
@@ -103,5 +109,7 @@ public class MainActivity extends BaseActivity {
             }
         }
     };
+
+
 
 }

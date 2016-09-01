@@ -1,7 +1,7 @@
-package com.mydms.dms.core;
+package com.mydms.core;
 
-import com.mydms.dms.core.bean.DataInfo;
-import com.mydms.dms.core.realm.RealmUtil;
+import com.mydms.core.bean.DataInfo;
+import com.mydms.core.realm.RealmUtil;
 
 import java.util.ArrayList;
 import java.util.List;

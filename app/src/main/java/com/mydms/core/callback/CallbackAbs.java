@@ -1,4 +1,4 @@
-package com.mydms.dms.core.callback;
+package com.mydms.core.callback;
 
 import java.util.List;
 

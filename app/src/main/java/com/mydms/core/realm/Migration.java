@@ -1,4 +1,4 @@
-package com.mydms.dms.core.realm;
+package com.mydms.core.realm;
 
 import io.realm.DynamicRealm;
 import io.realm.RealmMigration;

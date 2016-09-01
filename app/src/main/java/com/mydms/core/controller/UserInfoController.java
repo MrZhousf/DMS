@@ -1,8 +1,8 @@
-package com.mydms.dms.controller;
+package com.mydms.core.controller;
 
 
 import com.google.gson.Gson;
-import com.mydms.dms.core.BaseController;
+import com.mydms.core.BaseController;
 import com.mydms.dms.model.UserInfo;
 import com.okhttplib.HttpInfo;
 import com.okhttplib.OkHttpUtil;

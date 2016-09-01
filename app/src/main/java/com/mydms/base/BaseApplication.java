@@ -3,9 +3,9 @@ package com.mydms.base;
 import android.app.Application;
 import android.os.Environment;
 
-import com.mydms.dms.controller.UserInfoController;
-import com.mydms.dms.core.DMS;
-import com.mydms.dms.core.realm.Migration;
+import com.mydms.core.controller.UserInfoController;
+import com.mydms.core.DMS;
+import com.mydms.core.realm.Migration;
 import com.mydms.dms.model.UserInfo;
 import com.okhttplib.OkHttpUtil;
 import com.okhttplib.annotation.CacheLevel;

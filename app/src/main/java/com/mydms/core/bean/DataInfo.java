@@ -1,4 +1,4 @@
-package com.mydms.dms.core.bean;
+package com.mydms.core.bean;
 
 import java.util.List;
 

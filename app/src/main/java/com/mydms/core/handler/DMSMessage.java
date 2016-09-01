@@ -1,4 +1,4 @@
-package com.mydms.dms.core.handler;
+package com.mydms.core.handler;
 
 
 import android.os.Message;
