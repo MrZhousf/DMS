@@ -101,16 +101,16 @@ protected void onDestroy() {
 ```
 
 ###DMS数据模型扩展步骤
- * 编写数据模型 extends RealmObject
- * 编写数据模型DMS extends BaseDMS
-   1.编写无参构造方法如下：
+ #### 编写数据模型 extends RealmObject
+ #### 编写数据模型DMS extends BaseDMS
+  * 1.编写无参构造方法如下：
 ```java
  public DMSWeather(){
         super.init();
     }
 ```
-   2.重写BaseDMS的initModelClass与doHttp方法
-   3.编写单例方法
+  * 2.重写BaseDMS的initModelClass与doHttp方法
+  * 3.编写单例方法
 ```java
 public static DMSWeather getInstance(){
         if(null == singleton){
