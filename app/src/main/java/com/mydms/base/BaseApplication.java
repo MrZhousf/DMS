@@ -3,9 +3,10 @@ package com.mydms.base;
 import android.app.Application;
 import android.os.Environment;
 
-import com.mydms.core.controller.UserInfoController;
 import com.mydms.core.DMS;
+import com.mydms.core.controller.UserInfoController;
 import com.mydms.core.realm.Migration;
+import com.mydms.core.realm.RealmUtil;
 import com.mydms.dms.model.UserInfo;
 import com.okhttplib.OkHttpUtil;
 import com.okhttplib.annotation.CacheLevel;
@@ -31,8 +32,8 @@ public class BaseApplication extends Application {
         super.onCreate();
         baseApplication = this;
         initOkHttpUtil();
+        initRealm();
         initDMS();
-
     }
 
     void initOkHttpUtil(){
@@ -51,7 +52,7 @@ public class BaseApplication extends Application {
                 .build();
     }
 
-    void initDMS(){
+    void initRealm(){
         RealmConfiguration realmConfiguration = new RealmConfiguration
                 .Builder(BaseApplication.getApplication())
                 .name("realm.realm")//配置名字
@@ -59,11 +60,13 @@ public class BaseApplication extends Application {
                 .schemaVersion(1)//版本号
                 .migration(new Migration())//数据库升级/迁移
                 .build();
+        RealmUtil.init(realmConfiguration,true);
+    }
+
+    void initDMS(){
         DMS.Builder()
                 .addMC(UserInfo.class,new UserInfoController())
                 .showDMSLog(true)
-                .showRealmLog(true)
-                .realmConfiguration(realmConfiguration)
                 .init();
 
     }

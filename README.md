@@ -23,6 +23,42 @@
 结合以上需求以及问题，编写一个简洁的数据管理系统，提供公共数据单例，集合数据改变回调通知业务。
 
 ##相关示例
+
+###Application初始化操作
+
+* 初始化OkHttpUtil
+```java
+    void initOkHttpUtil(){
+        String downloadFileDir = Environment.getExternalStorageDirectory().getPath()+"/okHttp_download/";
+        OkHttpUtil.init(this)
+                .setConnectTimeout(30)//连接超时时间
+                .setWriteTimeout(30)//写超时时间
+                .setReadTimeout(30)//读超时时间
+                .setMaxCacheSize(10 * 1024 * 1024)//缓存空间大小
+                .setCacheLevel(CacheLevel.FIRST_LEVEL)//缓存等级
+                .setCacheType(CacheType.NETWORK_THEN_CACHE)//缓存类型
+                .setShowHttpLog(true)//显示请求日志
+                .setShowLifecycleLog(false)//显示Activity销毁日志
+                .setRetryOnConnectionFailure(false)//失败后不自动重连
+                .setDownloadFileDir(downloadFileDir)//文件下载保存目录
+                .build();
+    }
+```
+
+* 初始化RealmUtil
+```java
+    void initRealm(){
+        RealmConfiguration realmConfiguration = new RealmConfiguration
+                .Builder(BaseApplication.getApplication())
+                .name("realm.realm")//配置名字
+                .encryptionKey(new byte[64])
+                .schemaVersion(1)//版本号
+                .migration(new Migration())//数据库升级/迁移
+                .build();
+        RealmUtil.init(realmConfiguration,true);
+    }
+```
+
 ###获取用户信息
 ```java
 DMSUserInfo.getInstance().getModel()

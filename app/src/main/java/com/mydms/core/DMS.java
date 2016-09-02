@@ -6,7 +6,6 @@ import com.mydms.core.bean.DataInfo;
 import com.mydms.core.callback.Callback;
 import com.mydms.core.handler.CallbackMessage;
 import com.mydms.core.handler.DMSHandler;
-import com.mydms.core.realm.RealmUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +14,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import io.realm.RealmConfiguration;
 import io.realm.RealmObject;
 
 
@@ -67,7 +65,6 @@ public class DMS {
         executorService = Executors.newCachedThreadPool();
         modelControllerMap = builder.modelControllerMap;
         isShowLog = builder.isShowLog;
-        RealmUtil.init(builder.realmConfiguration,builder.isShowRealmLog);
         //初始化模型状态
         for(Map.Entry<Class,BaseController> entry : modelControllerMap.entrySet()){
             modelSwitchMap.put(entry.getKey(),true);
@@ -244,8 +241,6 @@ public class DMS {
 
         Map<Class,BaseController> modelControllerMap = new ConcurrentHashMap<>();
         boolean isShowLog;
-        boolean isShowRealmLog;
-        RealmConfiguration realmConfiguration;
 
         public DMS init(){
             return getInstance(this);
@@ -263,16 +258,6 @@ public class DMS {
 
         public Builder showDMSLog(boolean isShowLog){
             this.isShowLog = isShowLog;
-            return this;
-        }
-
-        public Builder showRealmLog(boolean isShowLog){
-            this.isShowRealmLog = isShowLog;
-            return this;
-        }
-
-        public Builder realmConfiguration(RealmConfiguration realmConfiguration){
-            this.realmConfiguration = realmConfiguration;
             return this;
         }
 
