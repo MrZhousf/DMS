@@ -2,6 +2,7 @@ package com.mydms.dms.data;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.mydms.dms.BaseDMS;
 import com.mydms.dms.model.Weather;
 import com.okhttplib.HttpInfo;
 import com.okhttplib.OkHttpUtil;
@@ -14,7 +15,7 @@ import java.util.List;
  * 天气信息DMS
  * @author: zhousf
  */
-public class DMSWeather extends BaseDMS<Weather>{
+public class DMSWeather extends BaseDMS<Weather> {
 
     String url = "http://api.k780.com:88/?app=weather.future&weaid=1&appkey=10003&sign=b59bc3ef6191eb9f747dd4e83c99f2a4&format=json";
 

@@ -1,4 +1,4 @@
-package com.mydms.dms.data;
+package com.mydms.dms;
 
 import android.os.Message;
 
@@ -82,7 +82,7 @@ public abstract class BaseDMS<T extends RealmObject> {
                             .build();
                     DMSMainHandler.getInstance().sendMessage(resMsg);
                 }
-                init();
+                initModel();
             }
         });
     }
@@ -122,12 +122,6 @@ public abstract class BaseDMS<T extends RealmObject> {
         this.failedResult = failedResult;
     }
 
-    void initExecutorService(){
-        if(null == executorService){
-            executorService = Executors.newCachedThreadPool();
-        }
-    }
-
     /**
      * 模型改变时回调
      */
@@ -158,9 +152,21 @@ public abstract class BaseDMS<T extends RealmObject> {
      * 初始化数据模型
      */
     protected void init(){
-        Class clazz = initModelClass();
+        //初始化线程池
+        initExecutorService();
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                initModel();
+            }
+        });
+    }
+
+    void initModel(){
+        final Class clazz = initModelClass();
         if(null == clazz)
-            throw new IllegalArgumentException("please override the abstract method initModelClass and return an value of available!");
+            throw new IllegalArgumentException("please override the abstract method initModelClass " +
+                    "and return an value of available!");
         List<T> list = getDataFromDB(clazz);
         modelList = new ArrayList<>();
         if(null != list && list.size() > 0){
@@ -192,6 +198,12 @@ public abstract class BaseDMS<T extends RealmObject> {
             }catch (Exception e){
                 e.printStackTrace();
             }
+        }
+    }
+
+    void initExecutorService(){
+        if(null == executorService){
+            executorService = Executors.newCachedThreadPool();
         }
     }
 

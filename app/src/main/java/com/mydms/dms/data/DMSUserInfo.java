@@ -1,6 +1,7 @@
 package com.mydms.dms.data;
 
 import com.google.gson.Gson;
+import com.mydms.dms.BaseDMS;
 import com.mydms.dms.model.UserInfo;
 import com.okhttplib.HttpInfo;
 import com.okhttplib.OkHttpUtil;
