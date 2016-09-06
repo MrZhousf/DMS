@@ -2,15 +2,18 @@ package com.mydms.dms;
 
 import android.os.Message;
 
-import com.mydms.dms.bean.Result;
 import com.mydms.core.realm.RealmUtil;
+import com.mydms.dms.bean.Result;
 import com.mydms.dms.handler.DMSMainHandler;
 import com.mydms.dms.handler.MainMessage;
-import com.mydms.dms.listener.DMSListener;
 import com.mydms.dms.listener.DMSChangeListener;
+import com.mydms.dms.listener.DMSListener;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +37,8 @@ public abstract class BaseDMS<T extends RealmObject> {
 
     T model;
 
+    Class clazz;
+
     List<T> modelList;
 
     String failedResult;
@@ -43,7 +48,7 @@ public abstract class BaseDMS<T extends RealmObject> {
      * @param listener 监听器
      * @param params 参数
      */
-    public void push(final DMSListener<T> listener, final Object... params){
+    public final void push(final DMSListener<T> listener, final Object... params){
         //初始化线程池
         initExecutorService();
         executorService.execute(new Runnable() {
@@ -90,7 +95,7 @@ public abstract class BaseDMS<T extends RealmObject> {
     /**
      * 添加DMS模型改变监听
      */
-    public void addChangeListener(DMSChangeListener<T> listener){
+    public final void addChangeListener(DMSChangeListener<T> listener){
         if (null == listener) {
             throw new IllegalArgumentException("Listener should not be null");
         }
@@ -102,7 +107,7 @@ public abstract class BaseDMS<T extends RealmObject> {
     /**
      * 移除DMS模型改变监听
      */
-    public void removeChangeListener(DMSChangeListener listener){
+    public final void removeChangeListener(DMSChangeListener listener){
         if (listener == null) {
             throw new IllegalArgumentException("Listener should not be null");
         }
@@ -163,7 +168,7 @@ public abstract class BaseDMS<T extends RealmObject> {
     }
 
     void initModel(){
-        final Class clazz = initModelClass();
+        clazz = initModelClass();
         if(null == clazz)
             throw new IllegalArgumentException("please override the abstract method initModelClass " +
                     "and return an value of available!");
@@ -207,14 +212,104 @@ public abstract class BaseDMS<T extends RealmObject> {
         }
     }
 
-    public T getModel() {
-        return model;
+    public final T getModel() {
+        //返回克隆对象，防止调用时更改对象影响数据模型
+        return deepCopy(model);
     }
 
-    public List<T> getModelList() {
+    public final List<T> getModelList() {
+        try {
+            List<T> newList = new ArrayList<>();
+            for(T m : modelList){
+                newList.add(deepCopy(m));
+            }
+            return newList;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         return modelList;
     }
 
+    public final boolean updateModel(T model){
+        model = RealmUtil.getInstance().update(model);
+        if(null != model){
+            init();
+            Result<T> result = new Result<T>();
+            result.setModel(model);
+            result.setModelList(modelToList(model));
+            result.setSuccessful(true);
+            result.setRetDetail("操作成功");
+            //数据改变回调
+            changeModelCallback(result);
+            return true;
+        }
+        return false;
+    }
 
+    //深度复制
+    T deepCopy(T model){
+        T newModel = null;
+        try {
+            newModel = (T) clazz.newInstance();
+            copyPropertiesExclude(model,newModel,null);
+            return newModel;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return newModel;
+    }
+
+    /**
+     * 复制对象属性
+     * @param from
+     * @param to
+     * @param exclude 排除属性列表
+     */
+    @SuppressWarnings("unchecked")
+    void copyPropertiesExclude(Object from, Object to, String[] exclude) throws Exception {
+        List<String> excludesList = null;
+        if(exclude != null && exclude.length > 0) {
+            excludesList = Arrays.asList(exclude); //构造列表对象
+        }
+        Method[] fromMethods = from.getClass().getDeclaredMethods();
+        Method[] toMethods = to.getClass().getDeclaredMethods();
+        Method fromMethod = null, toMethod = null;
+        String fromMethodName = null, toMethodName = null;
+        for (int i = 0; i < fromMethods.length; i++) {
+            fromMethod = fromMethods[i];
+            fromMethodName = fromMethod.getName();
+            if (!fromMethodName.contains("get"))
+                continue;
+            //排除列表检测
+            if(excludesList != null && excludesList.contains(fromMethodName.substring(3).toLowerCase())) {
+                continue;
+            }
+            toMethodName = "set" + fromMethodName.substring(3);
+            toMethod = findMethodByName(toMethods, toMethodName);
+            if (toMethod == null)
+                continue;
+            Object value = fromMethod.invoke(from, new Object[0]);
+            if(value == null)
+                continue;
+            //集合类判空处理
+            if(value instanceof Collection) {
+                Collection newValue = (Collection)value;
+                if(newValue.size() <= 0)
+                    continue;
+            }
+            toMethod.invoke(to, new Object[] {value});
+        }
+    }
+
+    /**
+     * 从方法数组中获取指定名称的方法
+     */
+    Method findMethodByName(Method[] methods, String name) {
+        for (int j = 0; j < methods.length; j++) {
+            if (methods[j].getName().equals(name))
+                return methods[j];
+        }
+        return null;
+    }
 
 }

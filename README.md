@@ -1,13 +1,13 @@
 # DMS
 基于Realm、OkHttp3封装的公共数据管理系统
 
-###公共数据：
+### 公共数据：
     共用、常用的数据，例如用户信息、偏好设置、项目配置、规则等
 
-###公共数据管理系统：
+### 公共数据管理系统：
     对公共数据进行统一管理与维护，并提供简洁的API，在数据源改变时自动回调更新UI的以数据为核心的数据管理系统，简称DMS
 
-###编写背景：
+### 编写背景：
     任何项目中都应该有公共数据的维护系统，然而公共数据的维护也是一项耗时耗力的工作。
     以用户信息为例：
 #### 方案一：采用静态类
@@ -22,12 +22,12 @@
 
 结合以上需求以及问题，编写一个简洁的数据管理系统，提供公共数据单例，集合数据改变回调通知业务。
 
-##相关示例
+## 相关示例
 
-###Application初始化操作
+### Application初始化操作
 
 * 初始化OkHttpUtil
-```java
+```
     void initOkHttpUtil(){
         String downloadFileDir = Environment.getExternalStorageDirectory().getPath()+"/okHttp_download/";
         OkHttpUtil.init(this)
@@ -46,7 +46,7 @@
 ```
 
 * 初始化RealmUtil
-```java
+```
     void initRealm(){
         RealmConfiguration realmConfiguration = new RealmConfiguration
                 .Builder(BaseApplication.getApplication())
@@ -59,12 +59,12 @@
     }
 ```
 
-###获取用户信息
-```java
+### 获取用户信息
+```
 DMSUserInfo.getInstance().getModel()
 ```
-###Push用户信息
-```java
+### Push用户信息
+```
 DMSUserInfo.getInstance().push(userInfoDMSListener);
 //用户信息回调
     DMSListener<UserInfo> userInfoDMSListener = new DMSListener<UserInfo>() {
@@ -80,9 +80,9 @@ DMSUserInfo.getInstance().push(userInfoDMSListener);
     };
 ```
 
-###用户信息改变监听
-```java
-//增加用户信息监听
+### 用户信息改变监听
+```
+//增加````用户信息监听
 DMSUserInfo.getInstance().addChangeListener(userInfoDMSChangeListener);
 
 //用户信息改变回调
@@ -100,18 +100,18 @@ protected void onDestroy() {
 }
 ```
 
-###DMS数据模型扩展步骤
+### DMS数据模型扩展步骤
  #### 编写数据模型 extends RealmObject
  #### 编写数据模型DMS extends BaseDMS
   * 1.编写无参构造方法如下：
-```java
+```
  public DMSWeather(){
         super.init();
     }
 ```
   * 2.重写BaseDMS的initModelClass与doHttp方法
   * 3.编写单例方法
-```java
+```
 public static DMSWeather getInstance(){
         if(null == singleton){
             synchronized (DMSWeather.class){
@@ -124,5 +124,11 @@ public static DMSWeather getInstance(){
     }
 ```
 
-##相关截图
+## 相关截图
 ![](https://github.com/MrZhousf/DMS/blob/master/pic/1.jpg?raw=true)
+
+
+## 有问题反馈
+
+在使用中有任何问题，欢迎反馈给我，可以用以下联系方式跟我交流
+QQ: 424427633

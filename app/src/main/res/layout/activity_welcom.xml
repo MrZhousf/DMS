@@ -73,10 +73,19 @@
         android:layout_height="wrap_content"
         />
 
+    <Button
+        android:id="@+id/btnUpdateData"
+        android:layout_below="@+id/tvGetData"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="修改用户信息"
+        />
+
 
     <Button
         android:id="@+id/btnPushWeather"
-        android:layout_below="@+id/tvGetData"
+        android:layout_below="@+id/btnUpdateData"
         android:layout_marginTop="20dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -6,7 +6,7 @@ import io.realm.RealmObject;
  * 天气信息模型
  * @author: zhousf
  */
-public class Weather extends RealmObject{
+public class Weather extends RealmObject implements Cloneable{
 
     String weaid;  // 1,
     String days;  // 2016-09-01,

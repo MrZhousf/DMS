@@ -45,9 +45,10 @@ public class WelcomeActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         //增加用户信息监听
         DMSUserInfo.getInstance().addChangeListener(userInfoDMSChangeListener);
+
     }
 
-    @OnClick({R.id.btnPush, R.id.btnGetData, R.id.btnPushWeather})
+    @OnClick({R.id.btnPush, R.id.btnGetData, R.id.btnUpdateData, R.id.btnPushWeather})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnPush://push用户信息
@@ -55,6 +56,13 @@ public class WelcomeActivity extends BaseActivity {
                 break;
             case R.id.btnGetData://获取用户信息
                 tvGetData.setText(DMSUserInfo.getInstance().getModel().toString());
+                break;
+            case R.id.btnUpdateData://修改用户信息
+                UserInfo info = DMSUserInfo.getInstance().getModel();
+                info.setDatetime_1("修改用户信息");
+                if(DMSUserInfo.getInstance().updateModel(info)){
+                    Toast.makeText(WelcomeActivity.this,"修改用户信息成功",Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.btnPushWeather://push天气信息
                 DMSWeather.getInstance().push(weatherDMSListener);

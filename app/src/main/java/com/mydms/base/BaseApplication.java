@@ -59,6 +59,7 @@ public class BaseApplication extends Application {
                 .encryptionKey(new byte[64])
                 .schemaVersion(1)//版本号
                 .migration(new Migration())//数据库升级/迁移
+                .deleteRealmIfMigrationNeeded()
                 .build();
         RealmUtil.init(realmConfiguration,true);
     }
