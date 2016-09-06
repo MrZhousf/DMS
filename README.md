@@ -26,7 +26,7 @@
 
 ### Application初始化操作
 
-* 初始化OkHttpUtil
+#### 初始化OkHttpUtil
 ```
     void initOkHttpUtil(){
         String downloadFileDir = Environment.getExternalStorageDirectory().getPath()+"/okHttp_download/";
@@ -45,7 +45,7 @@
     }
 ```
 
-* 初始化RealmUtil
+#### 初始化RealmUtil
 ```
     void initRealm(){
         RealmConfiguration realmConfiguration = new RealmConfiguration
@@ -82,7 +82,7 @@ DMSUserInfo.getInstance().push(userInfoDMSListener);
 
 ### 用户信息改变监听
 ```
-//增加````用户信息监听
+//增加用户信息监听
 DMSUserInfo.getInstance().addChangeListener(userInfoDMSChangeListener);
 
 //用户信息改变回调
@@ -101,16 +101,16 @@ protected void onDestroy() {
 ```
 
 ### DMS数据模型扩展步骤
- #### 编写数据模型 extends RealmObject
- #### 编写数据模型DMS extends BaseDMS
-  * 1.编写无参构造方法如下：
+ * 编写数据模型 extends RealmObject
+ * 编写数据模型DMS extends BaseDMS
+  1. 编写无参构造方法如下：
 ```
  public DMSWeather(){
         super.init();
     }
 ```
-  * 2.重写BaseDMS的initModelClass与doHttp方法
-  * 3.编写单例方法
+  2. 重写BaseDMS的initModelClass与doHttp方法
+  3. 编写单例方法
 ```
 public static DMSWeather getInstance(){
         if(null == singleton){
@@ -124,11 +124,11 @@ public static DMSWeather getInstance(){
     }
 ```
 
-## 相关截图
+### 相关截图
 ![](https://github.com/MrZhousf/DMS/blob/master/pic/1.jpg?raw=true)
 
 
-## 有问题反馈
+### 有问题反馈
 
 在使用中有任何问题，欢迎反馈给我，可以用以下联系方式跟我交流
-QQ: 424427633
+ * QQ: 424427633
