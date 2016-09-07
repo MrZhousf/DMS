@@ -10,7 +10,7 @@ import io.realm.RealmObject;
  */
 public class Result<T extends RealmObject> {
 
-    T model;
+    T model;//默认为ModelList的第一条数据
 
     List<T> modelList;
 

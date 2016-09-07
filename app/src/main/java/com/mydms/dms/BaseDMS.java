@@ -11,6 +11,8 @@ import com.mydms.dms.listener.DMSListener;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,11 +27,9 @@ import io.realm.RealmObject;
  * DMS基类
  * @author: zhousf
  */
-public abstract class BaseDMS<T extends RealmObject> {
+public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface<T> {
 
     protected abstract List<T> doHttp(Object[] params);
-
-    protected abstract Class initModelClass();
 
     final List<DMSChangeListener<T>> changeListeners = new CopyOnWriteArrayList<>();
 
@@ -37,18 +37,18 @@ public abstract class BaseDMS<T extends RealmObject> {
 
     T model;
 
-    Class clazz;
+    Class<T> clazz;
 
     List<T> modelList;
 
     String failedResult;
 
-    /**
-     * 发送网络获取数据命令
-     * @param listener 监听器
-     * @param params 参数
-     */
-    public final void push(final DMSListener<T> listener, final Object... params){
+    public BaseDMS() {
+        init();
+    }
+
+    @Override
+    public final void push(final DMSListener<T> listener, final Object... params) {
         //初始化线程池
         initExecutorService();
         executorService.execute(new Runnable() {
@@ -92,10 +92,8 @@ public abstract class BaseDMS<T extends RealmObject> {
         });
     }
 
-    /**
-     * 添加DMS模型改变监听
-     */
-    public final void addChangeListener(DMSChangeListener<T> listener){
+    @Override
+    public final void addChangeListener(DMSChangeListener<T> listener) {
         if (null == listener) {
             throw new IllegalArgumentException("Listener should not be null");
         }
@@ -104,10 +102,8 @@ public abstract class BaseDMS<T extends RealmObject> {
         }
     }
 
-    /**
-     * 移除DMS模型改变监听
-     */
-    public final void removeChangeListener(DMSChangeListener listener){
+    @Override
+    public final void removeChangeListener(DMSChangeListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("Listener should not be null");
         }
@@ -149,14 +145,14 @@ public abstract class BaseDMS<T extends RealmObject> {
         return RealmUtil.getInstance().insertBeforeDeleteAll(model);
     }
 
-    List<T> getDataFromDB(Class clazz){
+    protected List<T> getDataFromDB(Class clazz){
         return RealmUtil.getInstance().findAll(clazz);
     }
 
     /**
      * 初始化数据模型
      */
-    protected void init(){
+    void init(){
         //初始化线程池
         initExecutorService();
         executorService.execute(new Runnable() {
@@ -168,7 +164,7 @@ public abstract class BaseDMS<T extends RealmObject> {
     }
 
     void initModel(){
-        clazz = initModelClass();
+        initClazz();
         if(null == clazz)
             throw new IllegalArgumentException("please override the abstract method initModelClass " +
                     "and return an value of available!");
@@ -187,23 +183,10 @@ public abstract class BaseDMS<T extends RealmObject> {
         }
     }
 
-    /**
-     * 初始化String成员变量
-     */
-    void initStringFields(T model){
-        Field[] fields = model.getClass().getDeclaredFields();
-        if(null != fields){
-            try {
-                for(int i=0;i<fields.length;i++){
-                    if(fields[i].getType() == String.class){
-                        fields[i].setAccessible(true);
-                        fields[i].set(model,"");
-                    }
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
+    void initClazz(){
+        Type genType = getClass().getGenericSuperclass();
+        Type[] params = ((ParameterizedType) genType).getActualTypeArguments();
+        clazz = (Class) params[0];
     }
 
     void initExecutorService(){
@@ -212,11 +195,13 @@ public abstract class BaseDMS<T extends RealmObject> {
         }
     }
 
+    @Override
     public final T getModel() {
         //返回克隆对象，防止调用时更改对象影响数据模型
         return deepCopy(model);
     }
 
+    @Override
     public final List<T> getModelList() {
         try {
             List<T> newList = new ArrayList<>();
@@ -230,23 +215,33 @@ public abstract class BaseDMS<T extends RealmObject> {
         return modelList;
     }
 
-    public final boolean updateModel(T model){
-        model = RealmUtil.getInstance().update(model);
-        if(null != model){
-            init();
-            Result<T> result = new Result<T>();
-            result.setModel(model);
-            result.setModelList(modelToList(model));
-            result.setSuccessful(true);
-            result.setRetDetail("操作成功");
-            //数据改变回调
-            changeModelCallback(result);
-            return true;
+    @Override
+    public final boolean updateModel(T model) {
+        return updateModel(modelToList(model));
+    }
+
+    @Override
+    public final boolean updateModel(List<T> modelList) {
+        if(null != modelList && modelList.size() > 0){
+            List<T> list = RealmUtil.getInstance().update(modelList);
+            if(null != list && list.size() > 0){
+                init();
+                Result<T> result = new Result<T>();
+                result.setModel(list.get(0));
+                result.setModelList(list);
+                result.setSuccessful(true);
+                result.setRetDetail("操作成功");
+                //数据改变回调
+                changeModelCallback(result);
+                return true;
+            }
         }
         return false;
     }
 
-    //深度复制
+    /**
+     * 深度复制
+     */
     T deepCopy(T model){
         T newModel = null;
         try {
@@ -261,11 +256,10 @@ public abstract class BaseDMS<T extends RealmObject> {
 
     /**
      * 复制对象属性
-     * @param from
-     * @param to
+     * @param from 被复制对象
+     * @param to 赋值对象
      * @param exclude 排除属性列表
      */
-    @SuppressWarnings("unchecked")
     void copyPropertiesExclude(Object from, Object to, String[] exclude) throws Exception {
         List<String> excludesList = null;
         if(exclude != null && exclude.length > 0) {
@@ -310,6 +304,26 @@ public abstract class BaseDMS<T extends RealmObject> {
                 return methods[j];
         }
         return null;
+    }
+
+
+    /**
+     * 初始化String成员变量
+     */
+    void initStringFields(T model){
+        Field[] fields = model.getClass().getDeclaredFields();
+        if(null != fields){
+            try {
+                for(int i=0;i<fields.length;i++){
+                    if(fields[i].getType() == String.class){
+                        fields[i].setAccessible(true);
+                        fields[i].set(model,"");
+                    }
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 
 }
