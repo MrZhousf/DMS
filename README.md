@@ -120,7 +120,7 @@ public static DMSWeather getInstance(){
     }
 ```
  
-  * 重写BaseDMS的initModelClass与doHttp方法
+  * 重写BaseDMS的doHttp方法
   
 ### 相关截图
 ![](https://github.com/MrZhousf/DMS/blob/master/pic/1.jpg?raw=true)
