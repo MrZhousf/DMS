@@ -77,7 +77,7 @@ public class RealmUtil {
                     realm.where(tables.get(0).getClass()).findAll().deleteAllFromRealm();
                 }
                 if(realm.copyToRealm(tables).size()>0){
-                    showLog(DEBUG,"添加"+tables.get(0).getClass().getSimpleName()+"成功 ");
+                    showLog(INFO,"添加"+tables.get(0).getClass().getSimpleName()+"成功 ");
                     return true;
                 }else{
                     showLog(ERROR,"添加"+tables.get(0).getClass().getSimpleName()+"失败 ");
@@ -104,9 +104,9 @@ public class RealmUtil {
             RealmResults results = realm.where(table).findAll();
             bResult = results.deleteAllFromRealm();
             if(bResult){
-                showLog(DEBUG,"删除"+table.getSimpleName()+"成功");
+                showLog(INFO,"删除"+table.getSimpleName()+"成功");
             }else{
-                showLog(DEBUG,"删除"+table.getSimpleName()+"失败");
+                showLog(ERROR,"删除"+table.getSimpleName()+"失败");
             }
         } catch (Exception e){
             showLog(ERROR,"删除"+table.getSimpleName()+"失败[deleteAll]："+e.getMessage());
@@ -117,22 +117,38 @@ public class RealmUtil {
         return bResult;
     }
 
-    public <E extends RealmObject> E update(E table){
-        E element = null;
-        Realm realm = null;
-        try {
-            realm = getRealm();
-            realm.beginTransaction();
-            element = realm.copyToRealmOrUpdate(table);
-        } catch (Exception e){
-            showLog(ERROR,"更新"+table.getClass().getSimpleName()+"失败[update]："+e.getMessage());
-            cancelTransaction(realm);
-        } finally {
-            commitTransaction(realm);
+    public <E extends RealmObject> List<E> update(List<E> tables){
+        List<E> element = null;
+        if(null != tables && tables.size() > 0) {
+            Realm realm = null;
+            try {
+                realm = getRealm();
+                realm.beginTransaction();
+                element = realm.copyToRealmOrUpdate(tables);
+                showLog(INFO, "更新" + tables.get(0).getClass().getSimpleName() + "成功");
+            } catch (Exception e) {
+                showLog(ERROR, "更新" + tables.get(0).getClass().getSimpleName() + "失败[update]：" + e.getMessage());
+                cancelTransaction(realm);
+            } finally {
+                commitTransaction(realm);
+            }
         }
         return element;
     }
 
+    public <E extends RealmObject> E update(E table){
+        if(null != table){
+            List<E> tables = new ArrayList<>();
+            tables.add(table);
+            List<E> list = update(tables);
+            if(null != list && list.size() == 1){
+                return list.get(0);
+            }else{
+                return null;
+            }
+        }
+        return null;
+    }
 
     public <E extends RealmObject> List<E> findAll(Class table){
         List<E> list = new ArrayList<>();

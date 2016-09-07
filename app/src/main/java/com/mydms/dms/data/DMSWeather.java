@@ -21,10 +21,6 @@ public class DMSWeather extends BaseDMS<Weather> {
 
     private static DMSWeather singleton;
 
-    public DMSWeather(){
-        super.init();
-    }
-
     public static DMSWeather getInstance(){
         if(null == singleton){
             synchronized (DMSWeather.class){
@@ -34,11 +30,6 @@ public class DMSWeather extends BaseDMS<Weather> {
             }
         }
         return singleton;
-    }
-
-    @Override
-    protected Class initModelClass() {
-        return Weather.class;
     }
 
     @Override
