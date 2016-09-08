@@ -166,8 +166,7 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
     void initModel(){
         initClazz();
         if(null == clazz)
-            throw new IllegalArgumentException("please override the abstract method initModelClass " +
-                    "and return an value of available!");
+            throw new IllegalArgumentException("clazz is null");
         List<T> list = getDataFromDB(clazz);
         modelList = new ArrayList<>();
         if(null != list && list.size() > 0){
