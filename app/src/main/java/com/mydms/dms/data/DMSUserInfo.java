@@ -32,6 +32,11 @@ public class DMSUserInfo extends BaseDMS<UserInfo> {
     }
 
     @Override
+    protected int initCacheRule() {
+        return CacheRule_Permanent;
+    }
+
+    @Override
     protected List<UserInfo> doHttp(Object[] params) {
         UserInfo model = null;
         HttpInfo info = HttpInfo.Builder().setUrl(url).build();

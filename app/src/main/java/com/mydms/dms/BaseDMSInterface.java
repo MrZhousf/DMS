@@ -1,7 +1,7 @@
 package com.mydms.dms;
 
 import com.mydms.dms.listener.DMSChangeListener;
-import com.mydms.dms.listener.DMSListener;
+import com.mydms.dms.listener.DMSPushListener;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public interface BaseDMSInterface<T extends RealmObject> {
      * @param listener 监听器
      * @param params 参数
      */
-    void push(final DMSListener<T> listener, final Object... params);
+    void push(final DMSPushListener<T> listener, final Object... params);
 
     /**
      * 获取Model

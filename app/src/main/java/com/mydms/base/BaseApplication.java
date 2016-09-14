@@ -7,6 +7,8 @@ import com.mydms.core.DMS;
 import com.mydms.core.controller.UserInfoController;
 import com.mydms.core.realm.Migration;
 import com.mydms.core.realm.RealmUtil;
+import com.mydms.dms.data.DMSUserInfo;
+import com.mydms.dms.data.DMSWeather;
 import com.mydms.dms.model.UserInfo;
 import com.okhttplib.OkHttpUtil;
 import com.okhttplib.annotation.CacheLevel;
@@ -36,6 +38,13 @@ public class BaseApplication extends Application {
         initDMS();
     }
 
+    void initDMS(){
+        com.mydms.dms.DMS.Builder()
+                .addDMS(DMSUserInfo.getInstance())
+                .addDMS(DMSWeather.getInstance())
+                .init();
+    }
+
     void initOkHttpUtil(){
         String downloadFileDir = Environment.getExternalStorageDirectory().getPath()+"/okHttp_download/";
         OkHttpUtil.init(this)
@@ -45,7 +54,7 @@ public class BaseApplication extends Application {
                 .setMaxCacheSize(10 * 1024 * 1024)//缓存空间大小
                 .setCacheLevel(CacheLevel.FIRST_LEVEL)//缓存等级
                 .setCacheType(CacheType.NETWORK_THEN_CACHE)//缓存类型
-                .setShowHttpLog(true)//显示请求日志
+                .setShowHttpLog(false)//显示请求日志
                 .setShowLifecycleLog(false)//显示Activity销毁日志
                 .setRetryOnConnectionFailure(false)//失败后不自动重连
                 .setDownloadFileDir(downloadFileDir)//文件下载保存目录
@@ -64,19 +73,17 @@ public class BaseApplication extends Application {
         RealmUtil.init(realmConfiguration,true);
     }
 
-    void initDMS(){
+    void initDMS_Old(){
         DMS.Builder()
                 .addMC(UserInfo.class,new UserInfoController())
                 .showDMSLog(true)
                 .init();
-
     }
 
     @Override
     public void onTerminate() {
         super.onTerminate();
     }
-
 
 
 }

@@ -26,5 +26,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.+'
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'com.google.code.gson:gson:2.6.2'
-    compile 'com.zhousf.lib:okhttp3:1.5'
+    compile 'com.zhousf.lib:okhttp3:1.5.1'
 }

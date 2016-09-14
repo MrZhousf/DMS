@@ -10,10 +10,9 @@ import com.mydms.dms.bean.Result;
 import com.mydms.dms.data.DMSUserInfo;
 import com.mydms.dms.data.DMSWeather;
 import com.mydms.dms.listener.DMSChangeListener;
-import com.mydms.dms.listener.DMSListener;
+import com.mydms.dms.listener.DMSPushListener;
 import com.mydms.dms.model.UserInfo;
 import com.mydms.dms.model.Weather;
-import com.mydms.util.LogUtil;
 
 import java.util.List;
 
@@ -22,6 +21,7 @@ import butterknife.OnClick;
 
 /**
  * DMS演示
+ *
  * @author: zhousf
  */
 public class WelcomeActivity extends BaseActivity {
@@ -34,6 +34,8 @@ public class WelcomeActivity extends BaseActivity {
     TextView tvGetData;
     @Bind(R.id.tvPushWeather)
     TextView tvPushWeather;
+    @Bind(R.id.tvGetWeather)
+    TextView tvGetWeather;
 
     @Override
     protected int initLayout() {
@@ -48,34 +50,37 @@ public class WelcomeActivity extends BaseActivity {
 
     }
 
-    @OnClick({R.id.btnPush, R.id.btnGetData, R.id.btnUpdateData, R.id.btnPushWeather})
+    @OnClick({R.id.btnPush, R.id.btnGetData, R.id.btnUpdateData, R.id.btnPushWeather, R.id.btnGetWeather})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnPush://push用户信息
-                DMSUserInfo.getInstance().push(userInfoDMSListener);
+                DMSUserInfo.getInstance().push(userInfoDMSPushListener);
                 break;
-            case R.id.btnGetData://获取用户信息
+            case R.id.btnGetData://读取用户信息
                 tvGetData.setText(DMSUserInfo.getInstance().getModel().toString());
                 break;
             case R.id.btnUpdateData://修改用户信息
                 UserInfo info = DMSUserInfo.getInstance().getModel();
                 info.setDatetime_1("修改用户信息");
-                if(DMSUserInfo.getInstance().updateModel(info)){
-                    Toast.makeText(WelcomeActivity.this,"修改用户信息成功",Toast.LENGTH_SHORT).show();
+                if (DMSUserInfo.getInstance().updateModel(info)) {
+                    Toast.makeText(WelcomeActivity.this, "修改用户信息成功", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.btnPushWeather://push天气信息
-                DMSWeather.getInstance().push(weatherDMSListener);
+                DMSWeather.getInstance().push(weatherDMSPushListener);
+                break;
+            case R.id.btnGetWeather://读取天气信息
+                tvGetWeather.setText(DMSWeather.getInstance().getModel().toString());
                 break;
         }
     }
 
     //用户信息回调
-    DMSListener<UserInfo> userInfoDMSListener = new DMSListener<UserInfo>() {
+    DMSPushListener<UserInfo> userInfoDMSPushListener = new DMSPushListener<UserInfo>() {
         @Override
-        public void onResponse(Result<UserInfo> result) {
+        public void onPushed(Result<UserInfo> result) {
             if (result.isSuccessful()) {
-                Toast.makeText(WelcomeActivity.this,"Push用户信息成功",Toast.LENGTH_SHORT).show();
+                Toast.makeText(WelcomeActivity.this, "Push用户信息成功", Toast.LENGTH_SHORT).show();
                 tvPush.setText(result.getModel().toString());
             } else {
                 tvPush.setText(result.getRetDetail());
@@ -84,17 +89,17 @@ public class WelcomeActivity extends BaseActivity {
     };
 
     //天气信息回调
-    DMSListener<Weather> weatherDMSListener = new DMSListener<Weather>() {
+    DMSPushListener<Weather> weatherDMSPushListener = new DMSPushListener<Weather>() {
         @Override
-        public void onResponse(Result<Weather> result) {
+        public void onPushed(Result<Weather> result) {
             if (result.isSuccessful()) {
                 tvPushWeather.setText(result.getModel().toString());
                 StringBuilder log = new StringBuilder("******\n");
-                for (Weather w : result.getModelList()){
-                    log.append(w.toString()+"\n");
+                for (Weather w : result.getModelList()) {
+                    log.append(w.toString() + "\n");
                 }
-                LogUtil.d("weather",log.toString());
-                Toast.makeText(WelcomeActivity.this,"Push天气信息成功",Toast.LENGTH_SHORT).show();
+//                LogUtil.d("weather",log.toString());
+                Toast.makeText(WelcomeActivity.this, "Push天气信息成功", Toast.LENGTH_SHORT).show();
             } else {
                 tvPushWeather.setText(result.getRetDetail());
             }

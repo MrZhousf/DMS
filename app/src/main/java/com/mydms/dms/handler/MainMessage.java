@@ -4,7 +4,7 @@ import android.os.Message;
 
 import com.mydms.dms.bean.Result;
 import com.mydms.dms.listener.DMSChangeListener;
-import com.mydms.dms.listener.DMSListener;
+import com.mydms.dms.listener.DMSPushListener;
 
 import java.io.Serializable;
 
@@ -20,14 +20,14 @@ public class MainMessage<T extends RealmObject> implements Serializable {
 
     Result<T> result;
 
-    DMSListener<T> dmsListener;
+    DMSPushListener<T> dmsPushListener;
 
     DMSChangeListener<T> dmsChangeListener;
 
-    public MainMessage(int what, Result<T> result, DMSListener<T> dmsListener) {
+    public MainMessage(int what, Result<T> result, DMSPushListener<T> dmsPushListener) {
         this.what = what;
         this.result = result;
-        this.dmsListener = dmsListener;
+        this.dmsPushListener = dmsPushListener;
     }
 
     public MainMessage(int what, Result<T> result, DMSChangeListener<T> dmsChangeListener) {

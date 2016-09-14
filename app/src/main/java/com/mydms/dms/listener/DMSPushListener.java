@@ -8,8 +8,8 @@ import io.realm.RealmObject;
  * DMS（push）结果监听
  * @author: zhousf
  */
-public interface DMSListener<T extends RealmObject> {
+public interface DMSPushListener<T extends RealmObject> {
 
-    void onResponse(Result<T> result);
+    void onPushed(Result<T> result);
 
 }

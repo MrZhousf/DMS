@@ -33,6 +33,11 @@ public class DMSWeather extends BaseDMS<Weather> {
     }
 
     @Override
+    protected int initCacheRule() {
+        return CacheRule_First;
+    }
+
+    @Override
     protected List<Weather> doHttp(Object[] params) {
         List<Weather> list = null;
         HttpInfo info = HttpInfo.Builder().setUrl(url).build();

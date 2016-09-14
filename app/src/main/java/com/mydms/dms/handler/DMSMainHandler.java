@@ -6,7 +6,7 @@ import android.os.Message;
 
 import com.mydms.dms.bean.Result;
 import com.mydms.dms.listener.DMSChangeListener;
-import com.mydms.dms.listener.DMSListener;
+import com.mydms.dms.listener.DMSPushListener;
 
 /**
  * DMS主线程句柄
@@ -46,9 +46,9 @@ public class DMSMainHandler extends Handler {
             switch (what){
                 case CALLBACK_RESPONSE:
                     MainMessage resMsg = (MainMessage) msg.obj;
-                    DMSListener listener = resMsg.dmsListener;
+                    DMSPushListener listener = resMsg.dmsPushListener;
                     if(null != listener)
-                        listener.onResponse(resMsg.result);
+                        listener.onPushed(resMsg.result);
                     break;
                 case CALLBACK_CHANGE:
                     MainMessage changeMsg = (MainMessage) msg.obj;

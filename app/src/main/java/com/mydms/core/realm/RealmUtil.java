@@ -38,7 +38,9 @@ public class RealmUtil {
     }
 
     public Realm getRealm(){
-        return Realm.getDefaultInstance();
+        Realm realm = Realm.getDefaultInstance();
+        commitTransaction(realm);
+        return realm;
     }
 
     public <E extends RealmObject> boolean insertBeforeDeleteAll(E table){
@@ -169,12 +171,27 @@ public class RealmUtil {
         return list;
     }
 
-    void cancelTransaction(Realm realm){
+    public boolean deleteAll(){
+        try {
+            RealmUtil.getInstance().getRealm().executeTransactionAsync(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.deleteAll();
+                }
+            });
+        } catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public static void cancelTransaction(Realm realm){
         if(null != realm)
             realm.cancelTransaction();
     }
 
-    void commitTransaction(Realm realm){
+    public static void commitTransaction(Realm realm){
         if(null != realm && realm.isInTransaction()){
             realm.commitTransaction();
         }

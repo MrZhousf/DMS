@@ -1,13 +1,15 @@
 package com.mydms.dms;
 
 import android.os.Message;
+import android.util.Log;
 
 import com.mydms.core.realm.RealmUtil;
 import com.mydms.dms.bean.Result;
 import com.mydms.dms.handler.DMSMainHandler;
 import com.mydms.dms.handler.MainMessage;
 import com.mydms.dms.listener.DMSChangeListener;
-import com.mydms.dms.listener.DMSListener;
+import com.mydms.dms.listener.DMSPushListener;
+import com.mydms.dms.rule.ModelConfig;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -21,7 +23,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import io.realm.Realm;
 import io.realm.RealmObject;
+import io.realm.RealmObjectSchema;
 
 /**
  * DMS基类
@@ -29,7 +33,36 @@ import io.realm.RealmObject;
  */
 public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface<T> {
 
+    /**
+     * 缓存规则：单位（秒）
+     */
+    protected final int CacheRule_Permanent = -1;
+    protected final int CacheRule_Zero = 0;
+    protected final int CacheRule_First = 15;
+    protected final int CacheRule_Second = 60;
+    protected final int CacheRule_Third = 300;
+
+    /**
+     * 网络请求
+     */
     protected abstract List<T> doHttp(Object[] params);
+
+    /**
+     * 初始化缓存规则
+     */
+    protected abstract int initCacheRule();
+
+    /**
+     * 业务状态
+     */
+    public enum Status{
+        INIT,
+        PUSHING,
+        SUCCESS,
+        FAILED
+    }
+
+    Status status;
 
     final List<DMSChangeListener<T>> changeListeners = new CopyOnWriteArrayList<>();
 
@@ -38,6 +71,8 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
     T model;
 
     Class<T> clazz;
+
+    String clazzName;
 
     List<T> modelList;
 
@@ -48,7 +83,8 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
     }
 
     @Override
-    public final void push(final DMSListener<T> listener, final Object... params) {
+    public final void push(final DMSPushListener<T> listener, final Object... params) {
+        status = Status.PUSHING;
         //初始化线程池
         initExecutorService();
         executorService.execute(new Runnable() {
@@ -58,38 +94,122 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
                 Result<T> result = new Result<T>();
                 result.setSuccessful(false);
                 failedResult = "获取网络数据失败";
-                try {
-                    //从网络获取数据
-                    List<T> list = doHttp(params);
-                    if(null != list && list.size() > 0){
-                        //保存数据库
-                        if(insertBeforeDeleteAll(list)){
-                            T model = list.get(0);
-                            result.setModel(model);
-                            result.setModelList(list);
-                            result.setSuccessful(true);
-                            result.setRetDetail("操作成功");
-                            //数据改变回调
-                            changeModelCallback(result);
-                        }
-                    }else{
-                        result.setRetDetail(failedResult);
-                    }
-                } catch (Exception e){
-                    result.setRetDetail(failedResult+":"+e.getMessage());
+                if(needHttp()){
+                    //网络请求
+                    status = httpRequest(listener,result) ? Status.SUCCESS : Status.FAILED;
+                }else{
+                    //缓存请求
+                    status = cacheRequest(listener,result) ? Status.SUCCESS : Status.FAILED;
                 }
-                //操作结果回调
-                if(null != listener){
-                    Message resMsg = new MainMessage<T>(
-                            DMSMainHandler.CALLBACK_RESPONSE,
-                            result,
-                            listener)
-                            .build();
-                    DMSMainHandler.getInstance().sendMessage(resMsg);
-                }
-                initModel();
+                showLog("push "+clazzName+": "+status);
             }
         });
+    }
+
+    /**
+     * 缓存规则判断
+     */
+    boolean needHttp(){
+        int time = initCacheRule();
+        long timestampNow = System.currentTimeMillis();
+        long timestampLast = fetchLastTime();
+        //时间差
+        long timeDeference = (timestampNow - timestampLast) / 1000;
+        return timestampLast == -1 || (timeDeference >= time && time != CacheRule_Permanent);
+    }
+
+    long fetchLastTime(){
+        long timestampLast = -1;
+        Realm realm = RealmUtil.getInstance().getRealm();
+        ModelConfig config = realm.where(ModelConfig.class).equalTo("modelName",clazzName).findFirst();
+        if(null != config){
+            return config.getLastUpdateTime();
+        }
+        return timestampLast;
+    }
+
+    boolean initModelConfig(){
+        Realm realm = RealmUtil.getInstance().getRealm();
+        try {
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    RealmObjectSchema table = realm.getSchema().get(ModelConfig.class.getSimpleName());
+                    if(null == table){
+                        //若没有模型配置表则创建
+                        realm.createObject(ModelConfig.class);
+                    }
+                    ModelConfig record = realm.where(ModelConfig.class)
+                            .equalTo("modelName",clazzName)
+                            .findFirst();
+                    //对自定义模型进行首次配置
+                    if(null == record){
+                        ModelConfig modelConfig = new ModelConfig();
+                        modelConfig.setModelName(clazzName);
+                        modelConfig.setLastUpdateTime(CacheRule_Permanent);
+                        realm.insertOrUpdate(modelConfig);
+                        showLog("模型["+clazzName+"]初始化配置成功");
+                    }
+                }
+            });
+        } catch (Exception e){
+            e.printStackTrace();
+            showLog("模型["+clazzName+"]初始化配置失败");
+            return false;
+        }
+        return true;
+    }
+
+    boolean cacheRequest(DMSPushListener<T> listener, Result<T> result){
+        showLog("缓存请求"+"["+clazzName+"]");
+        result.setModel(model);
+        result.setModelList(modelList);
+        result.setSuccessful(true);
+        result.setRetDetail("操作成功");
+        //操作结果回调
+        callbackResponse(listener,result);
+        return true;
+    }
+
+    boolean httpRequest(DMSPushListener<T> listener, Result<T> result, Object... params){
+        boolean isSuccess = false;
+        showLog("网络请求"+"["+clazzName+"]");
+        try {
+            //从网络获取数据
+            List<T> list = doHttp(params);
+            if(null != list && list.size() > 0){
+                //保存数据库
+                if(insertBeforeDeleteAll(list)){
+                    T model = list.get(0);
+                    result.setModel(model);
+                    result.setModelList(list);
+                    result.setSuccessful(true);
+                    result.setRetDetail("操作成功");
+                    //数据改变回调
+                    changeModelCallback(result);
+                    isSuccess = true;
+                }
+            }else{
+                result.setRetDetail(failedResult);
+            }
+        } catch (Exception e){
+            result.setRetDetail(failedResult+":"+e.getMessage());
+        }
+        //操作结果回调
+        callbackResponse(listener,result);
+        initModel();
+        return isSuccess;
+    }
+
+    void callbackResponse(DMSPushListener<T> listener, Result<T> result){
+        if(null != listener){
+            Message resMsg = new MainMessage<T>(
+                    DMSMainHandler.CALLBACK_RESPONSE,
+                    result,
+                    listener)
+                    .build();
+            DMSMainHandler.getInstance().sendMessage(resMsg);
+        }
     }
 
     @Override
@@ -141,10 +261,6 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
         }
     }
 
-    boolean insertBeforeDeleteAll(List<T> model){
-        return RealmUtil.getInstance().insertBeforeDeleteAll(model);
-    }
-
     protected List<T> getDataFromDB(Class clazz){
         return RealmUtil.getInstance().findAll(clazz);
     }
@@ -153,8 +269,12 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
      * 初始化数据模型
      */
     void init(){
+        status = Status.INIT;
         //初始化线程池
         initExecutorService();
+        initClazz();
+        //初始化模型配置
+        initModelConfig();
         executorService.execute(new Runnable() {
             @Override
             public void run() {
@@ -164,7 +284,6 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
     }
 
     void initModel(){
-        initClazz();
         if(null == clazz)
             throw new IllegalArgumentException("clazz is null");
         List<T> list = getDataFromDB(clazz);
@@ -186,6 +305,8 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
         Type genType = getClass().getGenericSuperclass();
         Type[] params = ((ParameterizedType) genType).getActualTypeArguments();
         clazz = (Class) params[0];
+        if(null != clazz)
+            clazzName = clazz.getSimpleName();
     }
 
     void initExecutorService(){
@@ -220,22 +341,60 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
     }
 
     @Override
-    public final boolean updateModel(List<T> modelList) {
+    public final boolean updateModel(final List<T> modelList) {
         if(null != modelList && modelList.size() > 0){
-            List<T> list = RealmUtil.getInstance().update(modelList);
-            if(null != list && list.size() > 0){
+            Realm realm = RealmUtil.getInstance().getRealm();
+            try {
+                realm.beginTransaction();
+                //更新模型信息
+                realm.copyToRealmOrUpdate(modelList);
+                //更新模型配置信息:更新模型后的下次请求强制采用网络方式
+                ModelConfig modelConfig = realm.where(ModelConfig.class).equalTo("modelName",clazzName).findFirst();
+                modelConfig.setLastUpdateTime(CacheRule_Permanent);
+                //初始化数据模型
                 init();
+                //数据改变回调
                 Result<T> result = new Result<T>();
-                result.setModel(list.get(0));
-                result.setModelList(list);
+                result.setModel(modelList.get(0));
+                result.setModelList(modelList);
                 result.setSuccessful(true);
                 result.setRetDetail("操作成功");
-                //数据改变回调
                 changeModelCallback(result);
                 return true;
+            } catch (Exception e){
+                e.printStackTrace();
+                RealmUtil.cancelTransaction(realm);
+                return false;
+            } finally {
+                RealmUtil.commitTransaction(realm);
             }
         }
         return false;
+    }
+
+    boolean insertBeforeDeleteAll(List<T> model){
+        Realm realm = RealmUtil.getInstance().getRealm();
+        try {
+            realm.beginTransaction();
+            //先删除
+            realm.where(model.get(0).getClass()).findAll().deleteAllFromRealm();
+            //再保存
+            if(realm.copyToRealm(model).size() > 0){
+                //更新模型配置信息
+                ModelConfig modelConfig = realm.where(ModelConfig.class).equalTo("modelName",clazzName).findFirst();
+                modelConfig.setLastUpdateTime(System.currentTimeMillis());
+            }else{
+                RealmUtil.cancelTransaction(realm);
+                return false;
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+            RealmUtil.cancelTransaction(realm);
+            return false;
+        } finally {
+            RealmUtil.commitTransaction(realm);
+        }
+        return true;
     }
 
     /**
@@ -323,6 +482,10 @@ public abstract class BaseDMS<T extends RealmObject> implements BaseDMSInterface
                 e.printStackTrace();
             }
         }
+    }
+
+    void showLog(String msg){
+        Log.d(clazzName, msg);
     }
 
 }
